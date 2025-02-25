@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Server.DataAccess.DataTransferObjects.Authentication
 {
-    public class SuccessfulRegistration
+    public class AuthenticatedCredentials
     {
-        public Guid userId { get; set; }
-        public string token { get; set; }
+        public required Guid userId { get; set; }
+        public required string token { get; set; }
     }
 }

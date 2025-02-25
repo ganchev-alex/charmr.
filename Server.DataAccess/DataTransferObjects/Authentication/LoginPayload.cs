@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace Server.DataAccess.DataTransferObjects.Authentication
 {
-    public class RegistrationPayload
+    public class LoginPayload
     {
-        [Required(ErrorMessage = "Your full name is required.")]
-        public required string fullName { get; set; }
         [Required(ErrorMessage = "Your email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email format. Please enter a valid email address.")]
         public required string email { get; set; }
@@ -19,6 +17,5 @@ namespace Server.DataAccess.DataTransferObjects.Authentication
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$",
         ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.")]
         public required string password { get; set; }
-        
     }
 }
