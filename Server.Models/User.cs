@@ -6,10 +6,11 @@ namespace Server.Models
     {
         [Key]
         public Guid Id { get; set; }
-        [Required]
         public required string FullName { get; set; }
         public required string Email { get; set; }
         public required byte[] PasswordHash { get; set; }
         public required byte[] PasswordSalt { get; set; }
+        public Details Details { get; set; }
+        public ICollection<Photo> Photos { get; set; }
     }
 }

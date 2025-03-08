@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Server.DataAccess.Repository.Abstraction
 {
-    public interface IUserRepository : IRepository<User>
+    public interface IPhotoRepository: IRepository<Photo>
     {
-        
+        public void Update(Photo updatedPhoto);
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server.DataAccess.Database;
 
@@ -10,9 +11,11 @@ using Server.DataAccess.Database;
 namespace Server.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250303111109_UpdateDetailsModel")]
+    partial class UpdateDetailsModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.2");
@@ -48,7 +51,7 @@ namespace Server.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<double>("Longitude")
+                    b.Property<double>("Longtitude")
                         .HasColumnType("REAL");
 
                     b.Property<string>("Sexuality")
@@ -61,33 +64,6 @@ namespace Server.DataAccess.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Details");
-                });
-
-            modelBuilder.Entity("Server.Models.Photo", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PublicId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("isMain")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Photo");
                 });
 
             modelBuilder.Entity("Server.Models.User", b =>
@@ -128,23 +104,10 @@ namespace Server.DataAccess.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Server.Models.Photo", b =>
-                {
-                    b.HasOne("Server.Models.User", "User")
-                        .WithMany("Photos")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Server.Models.User", b =>
                 {
                     b.Navigation("Details")
                         .IsRequired();
-
-                    b.Navigation("Photos");
                 });
 #pragma warning restore 612, 618
         }

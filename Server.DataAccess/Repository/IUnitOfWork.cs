@@ -10,6 +10,8 @@ namespace Server.DataAccess.Repository
     public interface IUnitOfWork
     {
         public IUserRepository userRepository { get; }
+        public IDetailsRepository detailsRepository { get; }
+        public IPhotoRepository photoRepository { get; }
 
         public Task SaveTransaction();
     }
