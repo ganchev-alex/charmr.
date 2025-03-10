@@ -3,7 +3,8 @@
     public enum SexEnum
     {
         male,
-        female
+        female,
+        both
     }
 
     public enum SexualityEnum

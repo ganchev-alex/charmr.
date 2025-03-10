@@ -9,6 +9,8 @@ namespace Server.DataAccess.Database
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options) { }
         public DbSet<User> Users { get; set; }
         public DbSet<Details> Details { get; set; }
+        public DbSet<Like> Likes { get; set; }
+        public DbSet<Match> Matches { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -18,6 +20,34 @@ namespace Server.DataAccess.Database
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<List<string>>(v, new JsonSerializerOptions()) ?? new List<string>()
                 );
+
+            modelBuilder.Entity<Like>()
+                .HasOne(like => like.Liker)
+                .WithMany(liker => liker.LikesGiven)
+                .HasForeignKey(like => like.LikerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Like>()
+                .HasOne(like => like.Liked)
+                .WithMany(liked => liked.LikesReceived)
+                .HasForeignKey(like => like.LikedId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Match>()
+                .HasOne(match => match.UserA)
+                .WithMany(userA => userA.MatchesAsUserA)
+                .HasForeignKey(match => match.UserAId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Match>()
+                .HasOne(match => match.UserB)
+                .WithMany(userB => userB.MatchesAsUserB)
+                .HasForeignKey(match => match.UserBId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Match>()
+                .HasIndex(match => new { match.UserAId, match.UserBId })
+                .IsUnique();
         }
 
     }

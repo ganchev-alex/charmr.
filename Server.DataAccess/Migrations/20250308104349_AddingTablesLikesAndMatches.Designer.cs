@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server.DataAccess.Database;
 
@@ -10,9 +11,11 @@ using Server.DataAccess.Database;
 namespace Server.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250308104349_AddingTablesLikesAndMatches")]
+    partial class AddingTablesLikesAndMatches
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.2");
@@ -74,9 +77,6 @@ namespace Server.DataAccess.Migrations
 
                     b.Property<Guid>("LikerId")
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("isSuperLike")
-                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("likedOn")
                         .HasColumnType("TEXT");

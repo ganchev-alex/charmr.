@@ -9,7 +9,6 @@ using System.Text;
 using Server.Services.Abstraction;
 using Microsoft.AspNetCore.Authorization;
 using Server.Models.Utility;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Server.Controllers
 {

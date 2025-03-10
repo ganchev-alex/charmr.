@@ -52,7 +52,7 @@ namespace Server.DataAccess.Repository.Implementation
             {
                 foreach (var prop in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    entityQuery = entityQuery.Include(includeProperties);
+                    entityQuery = entityQuery.Include(prop);
                 }
             }
 
@@ -72,7 +72,7 @@ namespace Server.DataAccess.Repository.Implementation
             {
                 foreach (var prop in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    entityQuery = entityQuery.Include(includeProperties);
+                    entityQuery = entityQuery.Include(prop);
                 }
             }
 
