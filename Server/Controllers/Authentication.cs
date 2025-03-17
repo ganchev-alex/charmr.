@@ -9,6 +9,7 @@ using System.Text;
 using Server.Services.Abstraction;
 using Microsoft.AspNetCore.Authorization;
 using Server.Models.Utility;
+using Server.Utility;
 
 namespace Server.Controllers
 {
@@ -84,11 +85,11 @@ namespace Server.Controllers
 
         public async Task<IActionResult> SetDetails([FromForm] DetailsPayload detailsPayload)
         {
-            var userIdClaim = User.FindFirst("NameId")?.Value.ToUpper();
+            var userId = User.ExtractUserId();
 
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+            if (userId == null)
             {
-                return Unauthorized(new { message = "User ID not found in token.", userId = userIdClaim });
+                return Unauthorized();
             }
 
             var userDetails = await _unit.detailsRepository.Get(d => d.UserId == userId);

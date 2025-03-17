@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Server.DataAccess.Database;
 using Server.DataAccess.DataTransferObjects.Retrieving;
 using Server.DataAccess.Repository;
+using Server.Models;
+using Server.Utility;
 
 namespace Server.Controllers
 {
@@ -57,6 +59,53 @@ namespace Server.Controllers
             };
 
             return Ok(userPayload);
+        }
+
+        [Authorize]
+        [HttpGet("likes")]
+        public async Task<ActionResult> RetriveLikedUsers()
+        {
+            var userId = User.ExtractUserId();
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var user = await _unit.userRepository.Get(u => u.Id == userId, "Details");
+            var receivedLikes = await _unit.likeRepository.GetAll(l => l.LikedId == userId, "Liker,Liker.Photos,Liker.Details");
+            var givenLikes = await _unit.likeRepository.GetAll(l => l.LikerId == userId, "Liked,Liked.Photos,Liked.Details");
+
+            if(user == null || givenLikes == null)
+            {
+                return NotFound();
+            }
+
+            var likesReceivedPayload = receivedLikes.Select(like => new LikePayload
+            {
+                UserId = like.LikerId.ToString(),
+                Name = like.Liker.FullName,
+                Age = like.Liker.CalculateAge(),
+                Distance = (int)like.Liker.GetDistance(user),
+                ProfilePicture = like.Liker.Photos.Where(p => p.isMain).Select(p => p.Url).FirstOrDefault() ?? "",
+                LikedOn = like.likedOn
+            })
+            .OrderByDescending(l => l.LikedOn)
+            .ToList();
+
+            var likesGivenPayload = givenLikes.Select(like => new LikePayload
+            {
+                UserId = like.LikedId.ToString(),
+                Name = like.Liked.FullName,
+                Age = like.Liked.CalculateAge(),
+                Distance = (int)like.Liked.GetDistance(user),
+                ProfilePicture = like.Liked.Photos.Where(p => p.isMain).Select(p => p.Url).FirstOrDefault() ?? "",
+                LikedOn = like.likedOn
+            })
+            .OrderByDescending(l => l.LikedOn)
+            .ToList();
+            
+            return Ok(new {likesGiven = likesGivenPayload, likesReceived = likesReceivedPayload}); 
         }
     }
 }
