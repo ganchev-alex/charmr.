@@ -86,15 +86,19 @@ namespace Server.Controllers
                 return Unauthorized();
             }
 
+            List<Match> matches = new List<Match>();
+
             foreach(var swipingAction in swipingActions)
             {
                 switch(swipingAction.ActionType)
                 {
                     case "like":
-                        await ManageLike((Guid)likerUserId, Guid.Parse(swipingAction.LikedId), false);
+                        var newMatch = await ManageLike((Guid)likerUserId, Guid.Parse(swipingAction.LikedId), false);
+                        if (newMatch != null) matches.Add(newMatch);
                         break;
                     case "super_like":
-                        await ManageLike((Guid)likerUserId, Guid.Parse(swipingAction.LikedId), true);
+                        var newSuperMatch = await ManageLike((Guid)likerUserId, Guid.Parse(swipingAction.LikedId), true);
+                        if (newSuperMatch != null) matches.Add(newSuperMatch);
                         break;
                     case "pass":
                         await ManageSkip((Guid)likerUserId, Guid.Parse(swipingAction.LikedId));
@@ -104,21 +108,29 @@ namespace Server.Controllers
             }
 
             await _unit.SaveTransaction();
+
+            if(matches.Count > 0)
+            {
+                return Ok(new { matches });
+            }
             
             return Created();
         }
 
-        private async Task ManageLike(Guid likerId, Guid likedId, bool isSuperLike)
+        private async Task<Match?> ManageLike(Guid likerId, Guid likedId, bool isSuperLike)
         {
             var alreadyLiked = await _unit.likeRepository.Get(l => l.LikerId == likedId && l.LikedId == likerId);
             if(alreadyLiked != null)
             {
-                _unit.matchRepository.Add(new Match { UserAId = likerId, UserBId = likedId });
+                var newMatch = new Match { UserAId = likerId, UserBId = likedId };
+                _unit.matchRepository.Add(newMatch);
                 _unit.likeRepository.Delete(alreadyLiked);
+                return newMatch;
             } 
             else
             {
                 _unit.likeRepository.Add(new Like { Id = Guid.NewGuid(), LikerId = likerId, LikedId = likedId, isSuperLike = isSuperLike, likedOn = DateTime.Today });
+                return null;
             }
         }
         private async Task ManageSkip(Guid skiperId, Guid skipedId)
@@ -130,6 +142,28 @@ namespace Server.Controllers
             {
                 _unit.likeRepository.Delete(existingLike);
             }
+        }
+
+        [Authorize]
+        [HttpDelete("remove-like")]
+        public async Task<IActionResult> RemoveLike([FromQuery] Guid likedId)
+        {
+            var userId = User.ExtractUserId();
+
+            if(userId == null) {
+                return Unauthorized();
+            }
+
+            var likeToRemove = await _unit.likeRepository.Get(l => l.LikerId == userId && l.LikedId == likedId);
+            
+            if(likeToRemove != null)
+            {
+                _unit.likeRepository.Delete(likeToRemove);
+            }
+
+            await _unit.SaveTransaction();
+
+            return Created();
         }
     }
 }

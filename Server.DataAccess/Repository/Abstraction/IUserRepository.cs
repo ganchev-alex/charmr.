@@ -1,4 +1,5 @@
-﻿using Server.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Server.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace Server.DataAccess.Repository.Abstraction
 {
     public interface IUserRepository : IRepository<User>
     {
-        
+        public void Update(User user,string email);
     }
 }

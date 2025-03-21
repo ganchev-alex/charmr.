@@ -16,5 +16,11 @@ namespace Server.DataAccess.Repository.Implementation
         {
             this._context = context;
         }
+
+        public void Update(User user, string email)
+        {
+            user.Email = email;
+            _context.Users.Update(user);
+        }
     }
 }

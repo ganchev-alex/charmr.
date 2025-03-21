@@ -13,6 +13,7 @@ namespace Server.DataAccess.DataTransferObjects.Retrieving
         public int Age { get; set; }
         public int Distance { get; set; }
         public string ProfilePicture { get; set; }
+        public bool IsSuperLike { get; set; }
         public DateTime LikedOn { get; set; }
        
     }

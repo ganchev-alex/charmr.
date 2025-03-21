@@ -23,14 +23,14 @@ namespace Server.Controllers
         [HttpGet("load-user")]
         public async Task<ActionResult> LoadUser()
         {
-            var userIdClaim = User.FindFirst("NameId")?.Value.ToUpper();
+            var userId = User.ExtractUserId();
 
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+            if (userId == null)
             {
                 return Unauthorized();
             }
 
-            var user = await _unit.userRepository.Get(u => u.Id == userId, "Details");
+            var user = await _unit.userRepository.Get(u => u.Id == userId, "Details,Photos");
 
             if(user == null)
             {
@@ -51,14 +51,36 @@ namespace Server.Controllers
                     selectedGender = "both"; break;
             }
 
-            var userPayload = new DefaultUserFiltering
+            var userFiltering = new DefaultUserFiltering
             {
                 LocationRadius = 30,
                 Gender = selectedGender,
                 AgeRange = [DateTime.UtcNow.Year - user.Details.BirthYear - 2, DateTime.UtcNow.Year - user.Details.BirthYear + 2]
             };
 
-            return Ok(userPayload);
+            var userData = new UserData
+            {
+                Credentials = new UserCredentials
+                {
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    VerificationStatus = user.Details.VerificationStatus,
+                },
+                Details = new UserDetails
+                {
+                    KnownAs = user.Details.KnownAs,
+                    About = user.Details.About,
+                    Age = user.CalculateAge(),
+                    Gender = user.Details.Gender,
+                    Sexuality = user.Details.Sexuality,
+                    LocationNormalized = user.Details.LocationNormalized,
+                    Interests = user.Details.Interests
+                },
+                ProfilePicture = user.Photos.Where(p => p.isMain).Select(p => new PhotoDetails { Id = p.Id, Url = p.Url }).FirstOrDefault(),
+                Gallery = user.Photos.Select(p => new PhotoDetails { Id = p.Id, Url = p.Url }).ToList()
+            };
+
+            return Ok(new {userFiltering, userData});
         }
 
         [Authorize]
@@ -88,6 +110,7 @@ namespace Server.Controllers
                 Age = like.Liker.CalculateAge(),
                 Distance = (int)like.Liker.GetDistance(user),
                 ProfilePicture = like.Liker.Photos.Where(p => p.isMain).Select(p => p.Url).FirstOrDefault() ?? "",
+                IsSuperLike = like.isSuperLike,
                 LikedOn = like.likedOn
             })
             .OrderByDescending(l => l.LikedOn)
@@ -100,12 +123,41 @@ namespace Server.Controllers
                 Age = like.Liked.CalculateAge(),
                 Distance = (int)like.Liked.GetDistance(user),
                 ProfilePicture = like.Liked.Photos.Where(p => p.isMain).Select(p => p.Url).FirstOrDefault() ?? "",
+                IsSuperLike = like.isSuperLike,
                 LikedOn = like.likedOn
             })
             .OrderByDescending(l => l.LikedOn)
             .ToList();
             
             return Ok(new {likesGiven = likesGivenPayload, likesReceived = likesReceivedPayload}); 
+        }
+
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<ActionResult<ProfilePreview>> PreviewProfile([FromQuery] Guid userId)
+        {
+            var user = await _unit.userRepository.Get(u => u.Id == userId, "Details,Photos");
+
+            if(user == null)
+            {
+                return NotFound();
+            }
+
+            var previewProfileData = new ProfilePreview
+            {
+                FullName = user.FullName,
+                KnownAs = user.Details.KnownAs,
+                About = user.Details.About,
+                Age = user.CalculateAge(),
+                Gender = user.Details.Gender,
+                Sexuality = user.Details.Sexuality,
+                LocationNormalized = user.Details.LocationNormalized,
+                Interests = user.Details.Interests,
+                ProfilePicture = user.Photos.Where(p => p.isMain).Select(p => new PhotoDetails { Id = p.Id, Url = p.Url }).FirstOrDefault(),
+                Gallery = user.Photos.Where(p => !p.isMain).Select(p => new PhotoDetails { Id = p.Id, Url = p.Url }).ToList()
+            };
+
+            return Ok(previewProfileData);
         }
     }
 }
