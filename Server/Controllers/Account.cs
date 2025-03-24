@@ -25,18 +25,18 @@ namespace Server.Controllers
 
         [Authorize]
         [HttpPost("add-photo")]
-        public async Task<IActionResult> AddNewPhoto([FromForm] IFormFile newPhoto)
+        public async Task<IActionResult> AddNewPhoto([FromForm] FormFile newPhoto)
         {
             var userId = User.ExtractUserId();
 
-            if(userId == null)
+            if (userId == null)
             {
                 return Unauthorized();
             }
 
             var uploadResult = await _photoService.AddPhotoAsync(newPhoto);
 
-            if(uploadResult.Error != null)
+            if (uploadResult.Error != null)
             {
                 return BadRequest();
             }
@@ -54,7 +54,7 @@ namespace Server.Controllers
 
             await _unit.SaveTransaction();
 
-            return Ok(new {url = newlyAddedPhoto.Url, id = newlyAddedPhoto.Id});
+            return Ok(new { url = newlyAddedPhoto.Url, id = newlyAddedPhoto.Id });
         }
 
         [Authorize]

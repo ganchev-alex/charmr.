@@ -86,7 +86,7 @@ namespace Server.Controllers
                 return Unauthorized();
             }
 
-            List<Match> matches = new List<Match>();
+            List<MatchPayload> matches = new List<MatchPayload>();
 
             foreach(var swipingAction in swipingActions)
             {
@@ -117,15 +117,23 @@ namespace Server.Controllers
             return Created();
         }
 
-        private async Task<Match?> ManageLike(Guid likerId, Guid likedId, bool isSuperLike)
+        private async Task<MatchPayload?> ManageLike(Guid likerId, Guid likedId, bool isSuperLike)
         {
             var alreadyLiked = await _unit.likeRepository.Get(l => l.LikerId == likedId && l.LikedId == likerId);
             if(alreadyLiked != null)
             {
                 var newMatch = new Match { UserAId = likerId, UserBId = likedId };
+                var userToMatch = await _unit.userRepository.Get(u => u.Id == likedId, "Photos");
+
+                if(userToMatch == null)
+                {
+                    return null;
+                }
+
                 _unit.matchRepository.Add(newMatch);
                 _unit.likeRepository.Delete(alreadyLiked);
-                return newMatch;
+
+                return new MatchPayload { MatchedUserId = likedId, Username = userToMatch.FullName, ProfilePicture = userToMatch.Photos.Where(p => p.isMain).FirstOrDefault().Url ?? "" };
             } 
             else
             {
@@ -150,7 +158,8 @@ namespace Server.Controllers
         {
             var userId = User.ExtractUserId();
 
-            if(userId == null) {
+            if(userId == null) 
+            {
                 return Unauthorized();
             }
 
@@ -164,6 +173,64 @@ namespace Server.Controllers
             await _unit.SaveTransaction();
 
             return Created();
+        }
+
+        [Authorize]
+        [HttpDelete("reject-like")]
+
+        public async Task<IActionResult> RejectLike([FromQuery] Guid likerId)
+        {
+            var userId = User.ExtractUserId();
+
+            if(userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var likeToRemove = await _unit.likeRepository.Get(l => l.LikerId == likerId && l.LikedId == userId);
+
+            if(likeToRemove != null)
+            {
+                _unit.likeRepository.Delete(likeToRemove);
+            }
+
+            await _unit.SaveTransaction();
+
+            return Created();
+        }
+
+        [Authorize]
+        [HttpPost("init-match")]
+
+        public async Task<ActionResult<MatchPayload>> InitializeMatch([FromQuery] Guid likerId)
+        {
+            var userId = User.ExtractUserId();
+            var userToMatch = await _unit.userRepository.Get(u => u.Id == likerId, "Photos");
+
+            if (userId == null || userToMatch == null)
+            {
+                return Unauthorized();
+            }
+
+            _unit.matchRepository.Add(new Match
+            {
+                Id = Guid.NewGuid(),
+                UserAId = (Guid)userId,
+                UserBId = likerId
+            });
+
+            var like = await _unit.likeRepository.Get(l => l.LikerId == likerId && l.LikedId == userId);
+            
+            if(like != null)
+            {
+                _unit.likeRepository.Delete(like);
+            }
+
+            await _unit.SaveTransaction();
+
+
+
+            return Ok(new MatchPayload { MatchedUserId = likerId, Username = userToMatch.FullName, ProfilePicture = userToMatch.Photos.Where(p => p.isMain).FirstOrDefault().Url ?? "" });
         }
     }
 }
