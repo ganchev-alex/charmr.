@@ -11,6 +11,9 @@ namespace Server.DataAccess.Database
         public DbSet<Details> Details { get; set; }
         public DbSet<Like> Likes { get; set; }
         public DbSet<Match> Matches { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,6 +51,22 @@ namespace Server.DataAccess.Database
             modelBuilder.Entity<Match>()
                 .HasIndex(match => new { match.UserAId, match.UserBId })
                 .IsUnique();
+
+            modelBuilder.Entity<Message>()
+                .HasOne(message => message.Sender)
+                .WithMany(user => user.MessagesSent)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(message => message.Recipient)
+                .WithMany(user => user.MessagesReceived)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Group>()
+                .HasMany(g => g.Connections) 
+                .WithOne(c => c.Group)      
+                .HasForeignKey(c => c.GroupIdentifier)
+                .IsRequired();
         }
 
     }

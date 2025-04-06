@@ -14,7 +14,9 @@ namespace Server.DataAccess.Repository
         public IPhotoRepository photoRepository { get; }
         public ILikeRepository likeRepository { get; }
         public IMatchRepository matchRepository { get; }
-
+        public IMessageRepository messageRepository { get; }
+        public IConnectionRepository connectionRepository { get; }
+        public IGroupRepository groupRepository { get; }
         public Task SaveTransaction();
     }
 }

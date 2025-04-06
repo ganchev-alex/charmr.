@@ -18,6 +18,7 @@ namespace Server.Models
 
         public ICollection<Match> MatchesAsUserA { get; set; } = new List<Match>();
         public ICollection<Match> MatchesAsUserB { get; set; } = new List<Match>();
-
+        public ICollection<Message> MessagesSent { get; set; } = new List<Message>();
+        public ICollection<Message> MessagesReceived { get; set; } = new List<Message>();
     }
 }

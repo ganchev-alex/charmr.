@@ -7,6 +7,7 @@ using Server.Services.Abstraction;
 using Server.Services.Implementation;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using Server.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,14 @@ builder.Services.AddScoped<DataSeeder>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
+
+builder.Services.AddSingleton<PresenceTracker>();
+
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+
+});
 
 builder.Services.AddControllers();
 builder.Services.AddCors();
@@ -60,11 +69,14 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 
-app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().SetIsOriginAllowed(origin => true));
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<PresenceHub>("/api/hubs/presence");
+app.MapHub<MessageHub>("/api/hubs/message");
 
 app.Run();

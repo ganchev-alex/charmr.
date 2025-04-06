@@ -1,11 +1,6 @@
 ﻿using Server.DataAccess.Database;
 using Server.DataAccess.Repository.Abstraction;
 using Server.DataAccess.Repository.Implementation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Server.DataAccess.Repository
 {
@@ -17,6 +12,9 @@ namespace Server.DataAccess.Repository
         public IPhotoRepository photoRepository { get; private set; }
         public ILikeRepository likeRepository { get; private set; }
         public IMatchRepository matchRepository { get; private set; }
+        public IMessageRepository messageRepository { get; private set; }
+        public IConnectionRepository connectionRepository { get; private set; }
+        public IGroupRepository groupRepository { get; private set; }
 
         public UnitOfWork(ApplicationDBContext context) {
             this._context = context;
@@ -25,6 +23,9 @@ namespace Server.DataAccess.Repository
             this.photoRepository = new PhotoRepository(context);
             this.likeRepository = new LikeRepository(context);
             this.matchRepository = new MatchRepository(context);
+            this.messageRepository = new MessageRepository(context);
+            this.connectionRepository = new ConnectionRepository(context);
+            this.groupRepository = new GroupRepository(context);
         }
 
         public async Task SaveTransaction()

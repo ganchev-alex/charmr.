@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.DataAccess.Database;
 using Server.DataAccess.DataTransferObjects.Retrieving;
+using Server.DataAccess.DataTransferObjects.Swiping;
 using Server.DataAccess.Repository;
 using Server.Models;
 using Server.Utility;
@@ -85,7 +86,7 @@ namespace Server.Controllers
 
         [Authorize]
         [HttpGet("likes")]
-        public async Task<ActionResult> RetriveLikedUsers()
+        public async Task<ActionResult> RetriveLikesCollections()
         {
             var userId = User.ExtractUserId();
 
@@ -158,6 +159,45 @@ namespace Server.Controllers
             };
 
             return Ok(previewProfileData);
+        }
+
+
+        [Authorize]
+        [HttpGet("matches")]
+        public async Task<ActionResult<List<MatchPayload>>> RetrieveMatches()
+        {
+            var userId = User.ExtractUserId();
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var matches = await _unit.matchRepository.GetAll((m) => m.UserAId == userId || m.UserBId == userId);
+
+            if (matches == null)
+            {
+                return Ok(new { matches = new List<MatchPayload>() });
+            }
+
+            var matchesPayload = new List<MatchPayload>();
+
+            foreach (var match in matches)
+            {
+                var matchedUserId = match.UserAId == userId ? match.UserBId : match.UserAId;
+                var matchedUser = await _unit.userRepository.Get(u => u.Id == matchedUserId, "Photos");
+                if (matchedUser != null)
+                {
+                    matchesPayload.Add(new MatchPayload
+                    {
+                        MatchedUserId = matchedUserId,
+                        Username = matchedUser.FullName,
+                        ProfilePicture = matchedUser.Photos.Where(p => p.isMain).FirstOrDefault().Url ?? ""
+                    });
+                }
+            }
+
+            return Ok(new { matches = matchesPayload });
         }
     }
 }

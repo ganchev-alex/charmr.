@@ -30,7 +30,7 @@ namespace Server.Controllers
                 return Unauthorized();
             }
 
-            var user = await _unit.userRepository.Get(u => u.Id == userId, "Details,LikesGiven");
+            var user = await _unit.userRepository.Get(u => u.Id == userId, "Details,LikesGiven,MatchesAsUserA,MatchesAsUserB");
             var allUsers = await _unit.userRepository.GetAll(u => u.Id != userId, "Details,Photos");
 
             if(allUsers==null || user == null)
@@ -39,6 +39,10 @@ namespace Server.Controllers
             }
 
             var likedByTheUser = user.LikesGiven.Select(like => like.LikedId).ToHashSet();
+
+            var matchedUserIds = user.MatchesAsUserA.Select(match => match.UserBId)
+                                         .Concat(user.MatchesAsUserB.Select(match => match.UserAId))
+                                         .ToHashSet();
 
             string defaultPreferedGender;
             switch (user.Details.Sexuality)
@@ -60,7 +64,8 @@ namespace Server.Controllers
                     filtering.AgeRange[0] <= DateTime.Today.Year - u.Details.BirthYear &&
                     filtering.AgeRange[1] >= DateTime.Today.Year - u.Details.BirthYear &&
                     user.GetDistance(u) <= filtering.LocationRadius &&
-                    !likedByTheUser.Contains(u.Id))
+                    !likedByTheUser.Contains(u.Id) &&
+                    !matchedUserIds.Contains(u.Id))
                 .Select(u => new UserSwipeCard
                 {
                     UserId = u.Id,
@@ -231,6 +236,45 @@ namespace Server.Controllers
 
 
             return Ok(new MatchPayload { MatchedUserId = likerId, Username = userToMatch.FullName, ProfilePicture = userToMatch.Photos.Where(p => p.isMain).FirstOrDefault().Url ?? "" });
+        }
+
+        [Authorize]
+        [HttpDelete("remove-match")]
+
+        public async Task<IActionResult> DeleteMatch([FromQuery] Guid matcherId)
+        {
+            var userId = User.ExtractUserId();
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var matchToDelete = await _unit.matchRepository.Get(match => (match.UserAId == userId && match.UserBId == matcherId) || (match.UserAId == matcherId && match.UserBId == userId));
+
+            if(matchToDelete == null)
+            {
+                return NotFound();
+            }
+
+            var messagesToDelete = await _unit.messageRepository.GetAll(mess => (mess.RecipientId == userId && mess.SenderId == matcherId) || (mess.RecipientId == matcherId && mess.SenderId == userId));
+            var connectionsToDelete = await _unit.connectionRepository.GetAll(conn => conn.GroupIdentifier.Contains(matchToDelete.UserAId.ToString()) && conn.GroupIdentifier.Contains(matchToDelete.UserBId.ToString()));
+
+            foreach(var mess in messagesToDelete)
+            {
+                _unit.messageRepository.Delete(mess);
+            }
+
+            _unit.matchRepository.Delete(matchToDelete);
+
+            foreach(var conn in connectionsToDelete)
+            {
+                _unit.connectionRepository.Delete(conn);
+            }
+
+            await _unit.SaveTransaction();
+
+            return Created();
         }
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server.DataAccess.Database;
 
@@ -10,30 +11,14 @@ using Server.DataAccess.Database;
 namespace Server.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250325161012_AddingMessageModel")]
+    partial class AddingMessageModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.2");
-
-            modelBuilder.Entity("Server.Models.Connection", b =>
-                {
-                    b.Property<string>("ConnectionId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GroupIdentifier")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("ConnectionId");
-
-                    b.HasIndex("GroupIdentifier");
-
-                    b.ToTable("Connections");
-                });
 
             modelBuilder.Entity("Server.Models.Details", b =>
                 {
@@ -79,16 +64,6 @@ namespace Server.DataAccess.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Details");
-                });
-
-            modelBuilder.Entity("Server.Models.Group", b =>
-                {
-                    b.Property<string>("Identifier")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Identifier");
-
-                    b.ToTable("Groups");
                 });
 
             modelBuilder.Entity("Server.Models.Like", b =>
@@ -231,13 +206,6 @@ namespace Server.DataAccess.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Server.Models.Connection", b =>
-                {
-                    b.HasOne("Server.Models.Group", null)
-                        .WithMany("Connections")
-                        .HasForeignKey("GroupIdentifier");
-                });
-
             modelBuilder.Entity("Server.Models.Details", b =>
                 {
                     b.HasOne("Server.Models.User", "User")
@@ -315,11 +283,6 @@ namespace Server.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Server.Models.Group", b =>
-                {
-                    b.Navigation("Connections");
                 });
 
             modelBuilder.Entity("Server.Models.User", b =>
