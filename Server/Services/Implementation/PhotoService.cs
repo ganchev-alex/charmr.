@@ -45,5 +45,3 @@ namespace Server.Services.Implementation
         }
     }
 }
-
-

@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: dotnet-api
-    env: dotnet
-    plan: free
-    buildCommand: dotnet publish Server.Web/Server.Web.csproj -c Release -o out
-    startCommand: dotnet out/Server.Web.dll
-    autoDeploy: true
